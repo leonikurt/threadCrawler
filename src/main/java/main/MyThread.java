@@ -1,6 +1,6 @@
 package main;
 
-public abstract class MyThread implements Runnable {
+public abstract class MyThread extends Thread implements Runnable {
 
   MyMonitor monitorInput;
   MyMonitor monitorOutput;
@@ -10,4 +10,6 @@ public abstract class MyThread implements Runnable {
         this.monitorInput = monitorInput;
         this.monitorOutput = monitorOutput;
     }
+
+    public abstract boolean isBufferEmpty();
 }

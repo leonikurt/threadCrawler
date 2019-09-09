@@ -16,4 +16,8 @@ public class MyMonitor {
     public synchronized void writeOnBuffer(String content){
         this.buffer.addImage(content);
     }
+
+    public synchronized boolean isBufferEmpty(){
+        return this.buffer.getImages().isEmpty();
+    }
 }

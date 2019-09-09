@@ -5,11 +5,17 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class UrlThread extends MyThread {
 
     public UrlThread(MyMonitor monitorInput, MyMonitor monitorOutput) {
         super(monitorInput, monitorOutput);
+    }
+
+    @Override
+    public boolean isBufferEmpty() {
+        return this.monitorInput.isBufferEmpty();
     }
 
     @Override

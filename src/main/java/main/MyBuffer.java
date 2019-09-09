@@ -21,4 +21,8 @@ public class MyBuffer {
     public void addImage(String image){
         images.add(image);
     }
+
+    public List<String> getImages(){
+        return images;
+    }
 }
