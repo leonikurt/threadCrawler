@@ -1,40 +1,52 @@
 package main;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
-public class MyPool extends Thread{
+public class MyPool implements PropertyChangeListener {
 
-    List<MyThread> threads;
-    long timeSleep;
+    private List<MyThread> threads;
+    private int count = 0;
+    private Queue<Integer> threadsWaiting = new LinkedList<>();
+    private Queue<Integer> urlsWaiting = new LinkedList<>();
 
-    public MyPool(List<MyThread>  threads, long timeSleep) {
-        this.threads = threads;
-        this.timeSleep = timeSleep;
+    public MyPool() {
     }
 
-
     @Override
-    public void run() {
-        while (true) {
-            if (threads.get(0).isBufferEmpty()) {
-                if (timeSleep < 1)
-                    return;
-                try {
-                    System.out.println("Sleeping thread");
-                    Thread.sleep(timeSleep);
-                    timeSleep = timeSleep / 2;
-                    System.out.println("Thread awake");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+    public void propertyChange(PropertyChangeEvent evt) {
+        System.out.println("listener working...");
+        if (evt.getPropertyName().equals("new")) {
+            if (count < threads.size()) {
+                this.startThread(this.threadsWaiting.peek());
+            } else {
+                this.urlsWaiting.add(0);
             }
-            else{
-                for (MyThread thread: threads) {
-                    if(!thread.isAlive()){
-                        thread.run();
-                    }
-                }
+        } else if (evt.getPropertyName().equals("finished")) {
+            if (!urlsWaiting.isEmpty()) {
+                urlsWaiting.peek();
+                int threadNumber = (int) evt.getOldValue();
+                this.startThread(threadNumber);
+            } else {
+                count--;
             }
+
         }
+    }
+
+    private void startThread(int threadNumber) {
+        this.threads.get(threadNumber).run();
+    }
+
+    public void setThreads(List<MyThread> threads) {
+        this.threads = threads;
+    }
+
+//    @Override
+    public void run() {
+        this.threads.forEach(Thread::run);
     }
 }

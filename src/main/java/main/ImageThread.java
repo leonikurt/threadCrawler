@@ -3,20 +3,18 @@ package main;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
 public class ImageThread extends MyThread {
+    PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-
-    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput) {
-        super(monitorInput, monitorOutput);
-    }
-
-    @Override
-    public boolean isBufferEmpty() {
-        return this.monitorInput.isBufferEmpty();
+    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number, PropertyChangeListener listener) {
+        super(monitorInput, monitorOutput, number);
+        this.propertyChangeSupport.addPropertyChangeListener("finished", listener);
     }
 
     @Override
@@ -28,10 +26,10 @@ public class ImageThread extends MyThread {
                 try (FileOutputStream out = (new FileOutputStream(new java.io.File(new Date().toString() + ".png")))) {
                     out.write(resultImageResponse.bodyAsBytes());  // resultImageResponse.body() is where the image's contents are.
                 }
-
-//                this.monitorOutput.writeOnBuffer(data);
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                this.propertyChangeSupport.firePropertyChange("finished", this.getNumber(), null);
             }
         }
 
