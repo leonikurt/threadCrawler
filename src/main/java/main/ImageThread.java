@@ -3,18 +3,17 @@ package main;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 
 public class ImageThread extends MyThread {
-    PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number, PropertyChangeListener listener) {
+    private final MyPool observer;
+
+    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number, MyPool observer) {
         super(monitorInput, monitorOutput, number);
-        this.propertyChangeSupport.addPropertyChangeListener("finished", listener);
+        this.observer = observer;
     }
 
     @Override
@@ -23,14 +22,18 @@ public class ImageThread extends MyThread {
         if (imageUrl != null) {
             try {
                 Connection.Response resultImageResponse = Jsoup.connect(imageUrl).ignoreContentType(true).execute();
-                try (FileOutputStream out = (new FileOutputStream(new java.io.File(new Date().toString() + ".png")))) {
-                    out.write(resultImageResponse.bodyAsBytes());  // resultImageResponse.body() is where the image's contents are.
+                File file = File.createTempFile("image", ".png");
+                file = new File(file.getName());
+                try (FileOutputStream out = (new FileOutputStream(file))) {
+                    out.write(resultImageResponse.bodyAsBytes());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                this.propertyChangeSupport.firePropertyChange("finished", this.getNumber(), null);
+                this.observer.threadNotification(this.getNumber());
             }
+        }else{
+            System.out.println("aaaaaaa");
         }
 
     }

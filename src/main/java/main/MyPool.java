@@ -1,39 +1,36 @@
 package main;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-public class MyPool implements PropertyChangeListener {
+public class MyPool implements Runnable {
 
     private List<MyThread> threads;
-    private int count = 0;
+    private int countUrlsWaiting = 0;
     private Queue<Integer> threadsWaiting = new LinkedList<>();
-    private Queue<Integer> urlsWaiting = new LinkedList<>();
 
     public MyPool() {
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        System.out.println("listener working...");
-        if (evt.getPropertyName().equals("new")) {
-            if (count < threads.size()) {
-                this.startThread(this.threadsWaiting.peek());
-            } else {
-                this.urlsWaiting.add(0);
-            }
-        } else if (evt.getPropertyName().equals("finished")) {
-            if (!urlsWaiting.isEmpty()) {
-                urlsWaiting.peek();
-                int threadNumber = (int) evt.getOldValue();
+
+    public void threadNotification(int threadNumber) {
+        synchronized (this) {
+            if (countUrlsWaiting > 0) {
                 this.startThread(threadNumber);
             } else {
-                count--;
+                this.threadsWaiting.add(threadNumber);
             }
+        }
+    }
 
+    public void bufferNotification() {
+        synchronized (this) {
+            if (!this.threadsWaiting.isEmpty()) {
+                this.startThread(this.threadsWaiting.peek());
+            } else {
+                this.countUrlsWaiting++;
+            }
         }
     }
 
@@ -43,10 +40,25 @@ public class MyPool implements PropertyChangeListener {
 
     public void setThreads(List<MyThread> threads) {
         this.threads = threads;
+
+        for (int i = 0; i < this.threads.size() ; i++) {
+            threadsWaiting.add(i);
+        }
     }
 
-//    @Override
+    @Override
     public void run() {
         this.threads.forEach(Thread::run);
+    }
+
+    public void run(int qtd) {
+        for (int i = 0; i < qtd && i < this.threadsWaiting.size(); i++) {
+            threads.get(this.threadsWaiting.peek()).run();
+
+        }
+    }
+
+    public void urlThreadNotification(int qtd) {
+        this.run(qtd);
     }
 }
