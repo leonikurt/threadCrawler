@@ -6,16 +6,20 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import static java.nio.file.Files.*;
 
 public class Main {
 
-    private static final Logger LOGGER = Logger.getLogger( Main.class.getName() );
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final int POOL_NUMBER = 15;
+
     public static void main(String[] args) {
         String filePath = "/home/felipe/Desktop/workspace/java/crawler/file.json";
-        if(args.length >= 1){
+        if (args.length >= 1) {
             filePath = args[0];
         }
 
@@ -24,28 +28,26 @@ public class Main {
         List<String> images = new ArrayList<>();
         List<String> response = new ArrayList<>();
 
-        int poolSize = 13;
-        UrlPool urlPool = new UrlPool(links.length);
-        ImagePool imagePool = new ImagePool();
+        ExecutorService imagePool = Executors.newFixedThreadPool(POOL_NUMBER);
+        ExecutorService urlPool = Executors.newFixedThreadPool(links.length);
 
-        MyMonitor urlMonitor = new MyMonitor(new MyBuffer(urls, imagePool));
-        MyMonitor imagesMonitor = new MyMonitor(new MyBuffer(images, imagePool));
+        MyMonitor urlMonitor = new MyMonitor(new MyBuffer(urls));
+        MyMonitor imagesMonitor = new MyMonitor(new MyBuffer(images));
         MyMonitor outputMonitor = new MyMonitor(new MyBuffer(response));
 
-        List<MyThread> urlThreads = createUrlRunnables(urlMonitor, imagesMonitor, links.length, urlPool);
-        List<MyThread> imageThreads = createImageRunnables(imagesMonitor, outputMonitor, poolSize, imagePool);
+        List<MyThread> urlThreads = createUrlRunnables(urlMonitor, imagesMonitor, links.length);
+        List<MyThread> imageThreads = createImageRunnables(imagesMonitor, outputMonitor, POOL_NUMBER);
+        urlThreads.forEach(urlPool::execute);
+        imageThreads.forEach(imagePool::execute);
 
-        urlPool.setThreads(urlThreads);
-        imagePool.setThreads(imageThreads);
-        urlPool.start();
 
     }
 
-    private static List<MyThread> createUrlRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, UrlPool pool) {
+    private static List<MyThread> createUrlRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int threadNumbers) {
         List<MyThread> runnables = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < threadNumbers; i++) {
             try {
-                runnables.add(new UrlThread(monitorInput, monitorOutput, i, pool));
+                runnables.add(new UrlThread(monitorInput, monitorOutput, i));
             } catch (Exception e) {
                 LOGGER.warning(e.getMessage());
             }
@@ -53,11 +55,11 @@ public class Main {
         return runnables;
     }
 
-    private static List<MyThread> createImageRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, ImagePool pool) {
+    private static List<MyThread> createImageRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int threadNumber) {
         List<MyThread> runnables = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < threadNumber; i++) {
             try {
-                runnables.add(new ImageThread(monitorInput, monitorOutput, i, pool));
+                runnables.add(new ImageThread(monitorInput, monitorOutput, i));
             } catch (Exception e) {
                 LOGGER.warning(e.getMessage());
             }

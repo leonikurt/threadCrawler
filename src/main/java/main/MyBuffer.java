@@ -7,17 +7,12 @@ import java.util.logging.Logger;
 public class MyBuffer {
 
     private static final Logger LOGGER = Logger.getLogger(MyBuffer.class.getName());
-    private ImagePool observer;
     private List<String> images;
 
-    public MyBuffer(List<String> images, ImagePool observer) {
+    public MyBuffer(List<String> images) {
         this.images = Collections.synchronizedList(images);
-        this.observer = observer;
     }
 
-    public MyBuffer(List<String> images) {
-        this.images = images;
-    }
 
     public String read() {
         synchronized (this) {
@@ -35,7 +30,6 @@ public class MyBuffer {
 
     public void addImage(String image) {
         images.add(image);
-        this.observer.bufferNotification();
     }
 
     public List<String> getImages() {

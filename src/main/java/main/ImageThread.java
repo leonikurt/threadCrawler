@@ -10,12 +10,10 @@ import java.util.logging.Logger;
 
 public class ImageThread extends MyThread {
 
-    private final ImagePool observer;
     private static final Logger LOGGER = Logger.getLogger(ImageThread.class.getName());
 
-    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number, ImagePool observer) {
+    public ImageThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number) {
         super(monitorInput, monitorOutput, number);
-        this.observer = observer;
     }
 
     @Override
@@ -39,7 +37,6 @@ public class ImageThread extends MyThread {
                 return;
             }
         }
-        this.observer.threadImageNotification(this.getNumber());
 
     }
 }

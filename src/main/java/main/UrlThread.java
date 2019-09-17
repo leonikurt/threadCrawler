@@ -11,11 +11,9 @@ import java.util.logging.Logger;
 public class UrlThread extends MyThread {
     private static final Logger LOGGER = Logger.getLogger(UrlThread.class.getName());
 
-    private UrlPool observer;
 
-    public UrlThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number, UrlPool observer) {
+    public UrlThread(MyMonitor monitorInput, MyMonitor monitorOutput, int number) {
         super(monitorInput, monitorOutput, number);
-        this.observer = observer;
     }
 
     @Override
@@ -38,6 +36,5 @@ public class UrlThread extends MyThread {
                 LOGGER.warning(e.getMessage());
             }
         }
-        this.observer.notify(super.getNumber());
     }
 }
