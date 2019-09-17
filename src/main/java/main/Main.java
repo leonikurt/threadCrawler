@@ -15,29 +15,33 @@ public class Main {
     private static final Logger LOGGER = Logger.getLogger( Main.class.getName() );
     public static void main(String[] args) {
         String filePath = "/home/felipe/Desktop/workspace/java/crawler/file.json";
+        if(args.length >= 1){
+            filePath = args[0];
+        }
+
         String[] links = parseJson(filePath);
         List<String> urls = new ArrayList<>(Arrays.asList(links));
         List<String> images = new ArrayList<>();
         List<String> response = new ArrayList<>();
 
-        int poolSize = 10;
-        MyPool urlPool = new MyPool();
-        MyPool imagePool = new MyPool();
+        int poolSize = 13;
+        UrlPool urlPool = new UrlPool(links.length);
+        ImagePool imagePool = new ImagePool();
 
         MyMonitor urlMonitor = new MyMonitor(new MyBuffer(urls, imagePool));
         MyMonitor imagesMonitor = new MyMonitor(new MyBuffer(images, imagePool));
         MyMonitor outputMonitor = new MyMonitor(new MyBuffer(response));
 
-        List<MyThread> urlThreads = createUrlRunnables(urlMonitor, imagesMonitor, poolSize / 2, imagePool);
-        List<MyThread> imageThreads = createImageRunnables(imagesMonitor, outputMonitor, poolSize / 2, imagePool);
+        List<MyThread> urlThreads = createUrlRunnables(urlMonitor, imagesMonitor, links.length, urlPool);
+        List<MyThread> imageThreads = createImageRunnables(imagesMonitor, outputMonitor, poolSize, imagePool);
 
         urlPool.setThreads(urlThreads);
         imagePool.setThreads(imageThreads);
-        urlPool.run();
+        urlPool.start();
 
     }
 
-    private static List<MyThread> createUrlRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, MyPool pool) {
+    private static List<MyThread> createUrlRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, UrlPool pool) {
         List<MyThread> runnables = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             try {
@@ -49,7 +53,7 @@ public class Main {
         return runnables;
     }
 
-    private static List<MyThread> createImageRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, MyPool pool) {
+    private static List<MyThread> createImageRunnables(MyMonitor monitorInput, MyMonitor monitorOutput, int size, ImagePool pool) {
         List<MyThread> runnables = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             try {
