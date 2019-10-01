@@ -23,6 +23,7 @@ public class Main {
             filePath = args[0];
         }
 
+        //Getting all links from the file
         String[] links = parseJson(filePath);
         List<String> urls = new ArrayList<>(Arrays.asList(links));
         List<String> images = new ArrayList<>();
@@ -31,6 +32,7 @@ public class Main {
         ExecutorService imagePool = Executors.newFixedThreadPool(POOL_NUMBER);
         ExecutorService urlPool = Executors.newFixedThreadPool(links.length);
 
+        //Observers to get the images and then download them
         MyMonitor urlMonitor = new MyMonitor(new MyBuffer(urls));
         MyMonitor imagesMonitor = new MyMonitor(new MyBuffer(images));
         MyMonitor outputMonitor = new MyMonitor(new MyBuffer(response));
